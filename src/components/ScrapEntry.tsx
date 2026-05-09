@@ -97,19 +97,56 @@ export function ScrapEntry() {
     setMessage('');
     
     try {
-      await saveScrapDetails({
-        date: format(date, 'yyyy-MM-dd'),
-        timestamp: new Date().toISOString(),
-        material: formData.material,
-        materialName: formData.materialName,
-        weight: formData.weight || 0,
-        reason: formData.reason,
-        mainReason: formData.mainReason,
-        shift: formData.shift,
-        section: formData.section === 'Manual' ? formData.customSection : formData.section,
-        imageBase64: image?.base64,
-        imageMimeType: image?.mimeType
-      });
+      const totalWeight = Number(formData.weight) || 0;
+      
+      if (formData.material === 'BIC') {
+        const bicWeight = totalWeight * 0.855;
+        const rubberWeight = totalWeight * 0.145;
+
+        // Save BIC portion
+        await saveScrapDetails({
+          date: format(date, 'yyyy-MM-dd'),
+          timestamp: new Date().toISOString(),
+          material: 'BIC',
+          materialName: formData.materialName,
+          weight: bicWeight.toFixed(2),
+          reason: formData.reason,
+          mainReason: formData.mainReason,
+          shift: formData.shift,
+          section: formData.section === 'Manual' ? formData.customSection : formData.section,
+          imageBase64: image?.base64,
+          imageMimeType: image?.mimeType
+        });
+
+        // Save Rubber portion
+        await saveScrapDetails({
+          date: format(date, 'yyyy-MM-dd'),
+          timestamp: new Date(Date.now() + 1000).toISOString(),
+          material: 'Rubber',
+          materialName: `${formData.materialName} (Rubber)`,
+          weight: rubberWeight.toFixed(2),
+          reason: formData.reason,
+          mainReason: formData.mainReason,
+          shift: formData.shift,
+          section: formData.section === 'Manual' ? formData.customSection : formData.section,
+          imageBase64: image?.base64,
+          imageMimeType: image?.mimeType
+        });
+      } else {
+        await saveScrapDetails({
+          date: format(date, 'yyyy-MM-dd'),
+          timestamp: new Date().toISOString(),
+          material: formData.material,
+          materialName: formData.materialName,
+          weight: formData.weight || 0,
+          reason: formData.reason,
+          mainReason: formData.mainReason,
+          shift: formData.shift,
+          section: formData.section === 'Manual' ? formData.customSection : formData.section,
+          imageBase64: image?.base64,
+          imageMimeType: image?.mimeType
+        });
+      }
       
       setMessage('Scrap data saved successfully!');
       loadData(true);
